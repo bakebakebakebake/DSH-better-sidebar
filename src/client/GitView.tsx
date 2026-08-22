@@ -53,11 +53,19 @@ export function computeGitGraph(entries: GitLogEntry[]): { rows: GraphRow[]; max
     let lane = -1
     const incomingLanes: number[] = []
     for (let l = 0; l < activeLanes.length; l++) {
-      if (activeLanes[l] === hash || (entry.hash && activeLanes[l] === entry.hash)) {
-        if (lane === -1) {
-          lane = l
-        } else {
-          incomingLanes.push(l)
+      const active = activeLanes[l]
+      if (active !== null && active !== undefined) {
+        const matches = active === hash
+          || (entry.hash && active === entry.hash)
+          || (entry.hash && active.startsWith(entry.hash))
+          || (entry.hashFull && active.startsWith(entry.hashFull))
+          || hash.startsWith(active)
+        if (matches) {
+          if (lane === -1) {
+            lane = l
+          } else {
+            incomingLanes.push(l)
+          }
         }
       }
     }
@@ -106,7 +114,14 @@ export function computeGitGraph(entries: GitLogEntry[]): { rows: GraphRow[]; max
       for (let p = 1; p < parents.length; p++) {
         const pHash = parents[p]
         if (pHash === undefined) continue
-        let pLane = activeLanes.indexOf(pHash)
+        let pLane = -1
+        for (let l = 0; l < activeLanes.length; l++) {
+          const active = activeLanes[l]
+          if (active !== null && active !== undefined && (active === pHash || active.startsWith(pHash) || pHash.startsWith(active))) {
+            pLane = l
+            break
+          }
+        }
         if (pLane === -1) {
           pLane = activeLanes.indexOf(null)
           if (pLane === -1) {

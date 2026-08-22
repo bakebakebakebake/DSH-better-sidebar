@@ -76,7 +76,7 @@ export function parsePorcelainZ(output: string): GitStatusEntry[] {
 /** Parse `git log --pretty=format:%h%x1f%s%x1f%an%x1f%ai%x1f%H%x1f%D%x1f%P` rows. */
 export function parseLogLines(output: string): GitLogEntry[] {
   const rows: GitLogEntry[] = []
-  for (const line of output.split('\n')) {
+  for (const line of output.split(/\r?\n/)) {
     if (line === '') continue
     const [hash, subject, author, date, hashFull, refs, parentsRaw] = line.split('\x1f')
     if (hash === undefined || subject === undefined) continue
@@ -87,7 +87,7 @@ export function parseLogLines(output: string): GitLogEntry[] {
       date: date ?? '',
       hashFull: hashFull ?? hash,
       refs: refs ?? '',
-      parents: parentsRaw ? parentsRaw.trim().split(' ').filter(Boolean) : [],
+      parents: parentsRaw ? parentsRaw.trim().split(/\s+/).filter(Boolean) : [],
     })
   }
   return rows

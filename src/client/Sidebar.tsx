@@ -484,9 +484,8 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
   const [sidebarMaximized, setSidebarMaximized] = useState(false)
   const [chatExpanded, setChatExpanded] = useState(false)
   const [chatFolded, setChatFolded] = useState(false)
-  const [maximizedRightPaneId, setMaximizedRightPaneId] = useState<string | null>(null)
 
-  const isRightMaximized = (sidebarMaximized || maximizedRightPaneId !== null) && (state?.panelOpen ?? false)
+  const isRightMaximized = sidebarMaximized && (state?.panelOpen ?? false)
 
   useEffect(() => {
     setChatExpanded(false)
@@ -560,9 +559,6 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
     }
   }, [composerSeatEl, isRightMaximized])
 
-  const toggleMaximizeRightPane = useCallback((paneId: string) => {
-    setMaximizedRightPaneId(cur => cur === paneId ? null : paneId)
-  }, [])
   // Refs keep the measure step stable across renders and let it skip work
   // mid-drag: during a width/corner drag the layout push resizes the center
   // column every frame, and reacting (setCenterRect → re-render) would
@@ -1129,12 +1125,7 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
               className={clsx(css.toggleButton, isRightMaximized && css.toggleButtonActive)}
               aria-label={isRightMaximized ? t('restoreSidebar') : t('maximizeSidebar')}
               onClick={() => {
-                if (isRightMaximized) {
-                  setSidebarMaximized(false)
-                  setMaximizedRightPaneId(null)
-                } else {
-                  setSidebarMaximized(true)
-                }
+                setSidebarMaximized(prev => !prev)
               }}
             >
               {isRightMaximized ? <IconSidebarRestoreOutline16 /> : <IconSidebarMaximizeOutline16 />}
@@ -1165,7 +1156,6 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
             onClick={() => {
               if (state.panelOpen) {
                 setSidebarMaximized(false)
-                setMaximizedRightPaneId(null)
               }
               store.reduce(togglePanel)
             }}
@@ -1246,8 +1236,6 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
             renderTab={renderTab}
             getTabIcon={tabIconOf}
             getTabBadge={tabBadgeOf}
-            maximizedPaneId={maximizedRightPaneId}
-            onToggleMaximizePane={toggleMaximizeRightPane}
           />
         </div>
         {/*

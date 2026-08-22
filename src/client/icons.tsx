@@ -110,21 +110,19 @@ export const IconSaveOutline16 = ({ size = 16, className }: IconProps) => (
 
 export const IconSidebarMaximizeOutline16 = ({ size = 16, className }: IconProps) => (
   <svg width={size} height={size} className={className} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M4.5 7V4.5H7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M4.5 4.5L7.5 7.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-    <path d="M11.5 9V11.5H9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M11.5 11.5L8.5 8.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    <path d="M9.5 3.5h3v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M12.5 3.5L8.5 7.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M6.5 12.5h-3v-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M3.5 12.5L7.5 8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 )
 
 export const IconSidebarRestoreOutline16 = ({ size = 16, className }: IconProps) => (
   <svg width={size} height={size} className={className} viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2" y="2" width="12" height="12" rx="3" stroke="currentColor" strokeWidth="1.5" />
-    <path d="M7 4.5V7H4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M7 7L4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-    <path d="M9 11.5V9H11.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-    <path d="M9 9L12 12" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    <path d="M12.5 6.5h-3V3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M9.5 6.5L13.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M3.5 9.5h3V12.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M6.5 9.5L2.5 13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
   </svg>
 )
 
