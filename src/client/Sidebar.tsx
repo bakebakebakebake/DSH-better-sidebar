@@ -43,6 +43,7 @@ import {
 } from './state.ts'
 import {
   IconChevronDown16, IconChevronUp16,
+  IconHistoryOutline16,
   IconPanelBottomOutline16, IconPanelRightOutline16,
   IconSidebarMaximizeOutline16, IconSidebarRestoreOutline16,
 } from './icons.tsx'
@@ -1430,7 +1431,7 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
                     aria-label={chatExpanded ? t('collapseChat') : t('expandChat')}
                   >
                     <div className={css.floatingChatStatus}>
-                      <span className={css.floatingChatDot} />
+                      <IconHistoryOutline16 size={14} className={css.floatingChatIcon} />
                       <span className={css.floatingChatTitle}>{t('chatPreview')}</span>
                     </div>
                     <span className={css.floatingChatToggle}>
