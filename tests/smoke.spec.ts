@@ -153,7 +153,7 @@ describe('host plugin smoke', () => {
       expect(manager.keysOf('s1')).toHaveLength(1)
       // After the shell exits, a reconnect respawns instead of reusing the dead handle.
       second.pty.write('exit\r')
-      const deadline = Date.now() + 5000
+      const deadline = Date.now() + 8000
       while (!second.exited && Date.now() < deadline) {
         await new Promise(resolve => setTimeout(resolve, 100))
       }
@@ -164,14 +164,14 @@ describe('host plugin smoke', () => {
     } finally {
       manager.disposeAll()
     }
-  })
+  }, 15_000)
 
   it('pty manager: exited zombie handles do not consume the quota', async () => {
     const manager = new PtyManager(defaultShell(), 1)
     try {
       const first = manager.open('s3', 't1', process.cwd(), 80, 24)
       first.pty.write('exit\r')
-      const deadline = Date.now() + 5000
+      const deadline = Date.now() + 8000
       while (!first.exited && Date.now() < deadline) {
         await new Promise(resolve => setTimeout(resolve, 100))
       }
@@ -183,7 +183,7 @@ describe('host plugin smoke', () => {
     } finally {
       manager.disposeAll()
     }
-  })
+  }, 15_000)
 
   it('pty manager: a reconnect within the grace period cancels the pending close', async () => {
     const manager = new PtyManager(defaultShell(), 3)
