@@ -2598,19 +2598,20 @@ body[data-dsh-sidebar-dragging] .bottomPanel {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid var(--dsw-alias-border-l2);
-  border-radius: 16px;
-  background: var(--dsw-alias-bg-layer-1);
-  background-color: var(--dsw-alias-bg-layer-1);
-  color: var(--dsw-alias-label-secondary);
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  background: var(--dsw-alias-interactive-bg-hover);
+  background-color: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
   font: var(--dsw-font-xs-13);
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-  backdrop-filter: blur(16px);
+  box-shadow: none;
+  backdrop-filter: blur(12px);
   margin-bottom: 2px;
   pointer-events: auto;
+  user-select: none;
   transition:
     background var(--ds-transition-duration-slow) var(--ds-ease-in-out),
     color var(--ds-transition-duration-slow) var(--ds-ease-in-out),
@@ -2618,9 +2619,9 @@ body[data-dsh-sidebar-dragging] .bottomPanel {
 }
 
 .floatingChatHeader:hover {
-  background: var(--dsw-alias-interactive-bg-hover);
+  background: var(--dsw-alias-interactive-bg-active);
   color: var(--dsw-alias-label-primary);
-  border-color: var(--dsw-alias-interactive-bg-hover-accent);
+  border-color: var(--dsw-alias-border-l2);
 }
 
 .floatingChatStatus {
@@ -2629,15 +2630,15 @@ body[data-dsh-sidebar-dragging] .bottomPanel {
   gap: 8px;
 }
 
-.floatingChatDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--dsw-alias-brand-primary, #3b82f6);
+.floatingChatIcon {
+  color: var(--dsw-alias-label-secondary);
+  flex-shrink: 0;
 }
 
 .floatingChatTitle {
   font-weight: 500;
+  font: var(--dsw-font-xs-13);
+  color: var(--dsw-alias-label-primary);
 }
 
 .floatingChatToggle {
