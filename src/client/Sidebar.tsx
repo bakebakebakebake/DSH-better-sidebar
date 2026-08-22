@@ -582,16 +582,18 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
       document.body.style.setProperty('--dsh-composer-bottom', `${bottom}px`)
     }
     updateComposerMetrics()
+    const frame = requestAnimationFrame(updateComposerMetrics)
     const observer = new ResizeObserver(updateComposerMetrics)
     observer.observe(composerSeatEl)
     window.addEventListener('resize', updateComposerMetrics)
     return () => {
+      cancelAnimationFrame(frame)
       observer.disconnect()
       window.removeEventListener('resize', updateComposerMetrics)
       document.body.style.removeProperty('--dsh-composer-height')
       document.body.style.removeProperty('--dsh-composer-bottom')
     }
-  }, [composerSeatEl, isRightMaximized])
+  }, [composerSeatEl, isRightMaximized, chatExpanded])
 
   // Refs keep the measure step stable across renders and let it skip work
   // mid-drag: during a width/corner drag the layout push resizes the center

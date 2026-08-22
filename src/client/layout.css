@@ -102,27 +102,23 @@ body[data-dsh-sidebar-maximized]:not([data-dsh-chat-expanded]) [data-slot="conve
   display: none !important;
 }
 
+/* Floating conversation history card above the composer in maximized mode */
 body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] {
-  display: contents !important;
-}
-
-/* [data-slot="conversation.session"] is a display:contents host. Its first
-   child is the real message viewport, so only that viewport becomes the
-   floating history card. The composer remains a sibling fixed to the viewport. */
-body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] > :first-child {
+  display: flex !important;
+  flex-direction: column !important;
   position: fixed !important;
   bottom: calc(
     var(--dsh-composer-bottom, 20px) +
-    var(--dsh-composer-height, 0px) +
-    8px
+    var(--dsh-composer-height, 120px) +
+    10px
   ) !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  width: min(720px, calc(100vw - 320px)) !important;
-  max-width: min(720px, calc(100vw - 320px)) !important;
-  height: 380px !important;
+  width: min(748px, calc(100vw - 320px)) !important;
+  max-width: min(748px, calc(100vw - 320px)) !important;
+  height: 420px !important;
   max-height: 52vh !important;
-  min-height: 0 !important;
+  min-height: 120px !important;
   box-sizing: border-box !important;
   flex: none !important;
   margin: 0 !important;
@@ -131,11 +127,30 @@ body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversatio
   background-color: var(--dsw-alias-bg-layer-1) !important;
   border: 1px solid var(--dsw-alias-border-l2) !important;
   border-radius: 16px !important;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.24) !important;
-  overflow: auto !important;
-  padding: 16px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
   pointer-events: auto !important;
   backdrop-filter: blur(20px) !important;
+}
+
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] > div,
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="viewArea"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="ChatView_root"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="ChatView_scroll"] {
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="column"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [data-chat-flow] {
+  padding: 16px 20px 24px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Floating conversation input bar in Codex-like maximized sidebar mode */
