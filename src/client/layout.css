@@ -201,6 +201,12 @@ body[data-dsh-sidebar-maximized] [data-composer-seat] > [data-slot="conversation
   overflow: visible !important;
 }
 
+/* Hide the stats/metrics row below composer in maximized sidebar mode */
+body[data-dsh-sidebar-maximized] [data-composer-seat] [class*="StatsLine"],
+body[data-dsh-sidebar-maximized] [data-composer-seat] [class*="FJxK0a_root"] {
+  display: none !important;
+}
+
 /* When fully folded to bottom DeepSeek tab, slide composer off-screen */
 body[data-dsh-sidebar-maximized][data-dsh-chat-folded] [data-composer-seat] {
   transform: translateX(-50%) translateY(140%) !important;
