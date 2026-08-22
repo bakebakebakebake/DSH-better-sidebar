@@ -124,16 +124,8 @@ function LeafView(props: {
   renderTab: (tab: SidebarTab, active: boolean, paneId: string) => ReactNode
   getTabIcon?: (tab: SidebarTab) => ReactNode
   getTabBadge?: (tab: SidebarTab) => ReactNode
-  isMaximized?: boolean
-  onToggleMaximize?: () => void
-  isTopRight?: boolean
-  isBottom?: boolean
-  isPaneHidden?: boolean
 }) {
-  const {
-    leaf, newTabOptions, actions, onNewTab, renderTab, getTabIcon, getTabBadge,
-    isMaximized, onToggleMaximize, isTopRight, isBottom, isPaneHidden,
-  } = props
+  const { leaf, newTabOptions, actions, onNewTab, renderTab, getTabIcon, getTabBadge } = props
   const [dropZone, setDropZone] = useState<DropZone | null>(null)
   const activeTab = leaf.tabs.find(tab => tab.id === leaf.active) ?? leaf.tabs[leaf.tabs.length - 1]
 
@@ -149,18 +141,9 @@ function LeafView(props: {
     }
   }, [])
 
-  if (isPaneHidden) {
-    return <div id={`dsh-pane-${leaf.id}`} style={{ display: 'none' }} />
-  }
-
   return (
     <div
-      id={`dsh-pane-${leaf.id}`}
-      className={clsx(
-        css.pane,
-        dropZone !== null && css.paneDrop,
-        isMaximized && css.paneMaximized,
-      )}
+      className={clsx(css.pane, dropZone !== null && css.paneDrop)}
       onPointerDown={() => { actions.focusPane(leaf.id) }}
       onDragOver={(event) => {
         event.preventDefault()
@@ -197,10 +180,6 @@ function LeafView(props: {
         newTabOptions={newTabOptions}
         getTabIcon={getTabIcon}
         getTabBadge={getTabBadge}
-        isMaximized={isMaximized}
-        onToggleMaximize={onToggleMaximize}
-        isTopRight={isTopRight}
-        isBottom={isBottom}
         onDropTab={(payload, before) => {
           if (before === null) actions.moveTabToEdge(payload, leaf.id, 'center')
           else actions.moveTabBefore(payload, leaf.id, before)
@@ -231,31 +210,9 @@ function LeafView(props: {
   )
 }
 
-function findLeafById(node: SplitNode, id: string): { id: string; tabs: SidebarTab[]; active: string | null } | null {
-  if (node.kind === 'leaf') return node.id === id ? node : null
-  for (const child of node.children) {
-    const found = findLeafById(child, id)
-    if (found !== null) return found
-  }
-  return null
-}
-
-function isTopRightLeaf(node: SplitNode, leafId: string): boolean {
-  if (node.kind === 'leaf') return node.id === leafId
-  if (node.dir === 'row') {
-    const lastChild = node.children[node.children.length - 1]
-    return lastChild ? isTopRightLeaf(lastChild, leafId) : false
-  } else {
-    const firstChild = node.children[0]
-    return firstChild ? isTopRightLeaf(firstChild, leafId) : false
-  }
-}
-
 /** Recursive node renderer. */
 function NodeView(props: {
   node: SplitNode
-  rootNode: SplitNode
-  isBottom: boolean
   state: SidebarState
   newTabOptions: NewTabOption[]
   actions: WorkbenchActions
@@ -263,13 +220,8 @@ function NodeView(props: {
   renderTab: (tab: SidebarTab, active: boolean, paneId: string) => ReactNode
   getTabIcon?: (tab: SidebarTab) => ReactNode
   getTabBadge?: (tab: SidebarTab) => ReactNode
-  maximizedPaneId?: string | null
-  onToggleMaximizePane?: (paneId: string) => void
 }) {
-  const {
-    node, rootNode, isBottom, state, newTabOptions, actions, onNewTab, renderTab, getTabIcon, getTabBadge,
-    maximizedPaneId, onToggleMaximizePane,
-  } = props
+  const { node, state, newTabOptions, actions, onNewTab, renderTab, getTabIcon, getTabBadge } = props
   if (node.kind === 'leaf') {
     return (
       <LeafView
@@ -280,10 +232,6 @@ function NodeView(props: {
         renderTab={renderTab}
         getTabIcon={getTabIcon}
         getTabBadge={getTabBadge}
-        isMaximized={maximizedPaneId === node.id}
-        onToggleMaximize={onToggleMaximizePane ? () => { onToggleMaximizePane(node.id) } : undefined}
-        isTopRight={isTopRightLeaf(rootNode, node.id)}
-        isBottom={isBottom}
       />
     )
   }
@@ -304,8 +252,6 @@ function NodeView(props: {
           >
             <NodeView
               node={child}
-              rootNode={rootNode}
-              isBottom={isBottom}
               state={state}
               newTabOptions={newTabOptions}
               actions={actions}
@@ -313,8 +259,6 @@ function NodeView(props: {
               renderTab={renderTab}
               getTabIcon={getTabIcon}
               getTabBadge={getTabBadge}
-              maximizedPaneId={maximizedPaneId}
-              onToggleMaximizePane={onToggleMaximizePane}
             />
           </div>
         </Fragment>
@@ -336,45 +280,12 @@ export function Workbench(props: {
   renderTab: (tab: SidebarTab, active: boolean, paneId: string) => ReactNode
   getTabIcon?: (tab: SidebarTab) => ReactNode
   getTabBadge?: (tab: SidebarTab) => ReactNode
-  maximizedPaneId?: string | null
-  onToggleMaximizePane?: (paneId: string) => void
 }) {
-  const {
-    state, tree, newTabOptions, actions, onNewTab, renderTab, getTabIcon, getTabBadge,
-    maximizedPaneId, onToggleMaximizePane,
-  } = props
-
-  const rootNode = tree ?? state.splits
-  const isBottom = tree !== undefined
-
-  // When a specific pane is maximized, render ONLY that leaf taking up 100% of workbench space
-  const maximizedLeaf = maximizedPaneId ? findLeafById(rootNode, maximizedPaneId) : null
-  if (maximizedLeaf !== null) {
-    return (
-      <div className={css.workbench}>
-        <LeafView
-          leaf={maximizedLeaf}
-          newTabOptions={newTabOptions}
-          actions={actions}
-          onNewTab={onNewTab}
-          renderTab={renderTab}
-          getTabIcon={getTabIcon}
-          getTabBadge={getTabBadge}
-          isMaximized={true}
-          onToggleMaximize={() => { onToggleMaximizePane?.(maximizedLeaf.id) }}
-          isTopRight={true}
-          isBottom={isBottom}
-        />
-      </div>
-    )
-  }
-
+  const { state, tree, newTabOptions, actions, onNewTab, renderTab, getTabIcon, getTabBadge } = props
   return (
     <div className={css.workbench}>
       <NodeView
-        node={rootNode}
-        rootNode={rootNode}
-        isBottom={isBottom}
+        node={tree ?? state.splits}
         state={state}
         newTabOptions={newTabOptions}
         actions={actions}
@@ -382,8 +293,6 @@ export function Workbench(props: {
         renderTab={renderTab}
         getTabIcon={getTabIcon}
         getTabBadge={getTabBadge}
-        maximizedPaneId={maximizedPaneId}
-        onToggleMaximizePane={onToggleMaximizePane}
       />
     </div>
   )
