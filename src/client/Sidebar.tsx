@@ -32,7 +32,9 @@ import { createElement, useCallback, useEffect, useMemo, useRef, useState, type 
 import { createPortal } from 'react-dom'
 import { useSyncExternalStore } from 'react'
 import clsx from 'clsx'
-import { FishLogo, IconCloseFill14, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import {
+  FishLogo, IconChevronDownOutline14, IconChevronUpOutline14, IconCloseFill14, Tooltip,
+} from '@deepseek-ai/dsh-client-ui-primitives'
 import type { Context, SidebarSessionList } from '../context-types.ts'
 import { appendToDraft } from './conversation-draft.ts'
 import {
@@ -1412,20 +1414,29 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
             createPortal(
               <>
                 {hasChatHistory && (
-                  <button
-                    type="button"
+                  <section
                     className={clsx(css.floatingChatHeader, chatExpanded && css.floatingChatHeaderExpanded)}
-                    onClick={() => { setChatExpanded(value => !value) }}
-                    aria-label={chatExpanded ? t('collapseChat') : t('expandChat')}
+                    data-testid="floating-chat-header"
+                    aria-label={t('chatPreview')}
                   >
-                    <div className={css.floatingChatStatus}>
-                      <IconHistoryOutline16 size={14} className={css.floatingChatIcon} />
-                      <span className={css.floatingChatTitle}>{t('chatPreview')}</span>
+                    <div className={css.floatingChatBody}>
+                      <button
+                        type="button"
+                        className={css.floatingChatButton}
+                        aria-expanded={chatExpanded}
+                        onClick={() => { setChatExpanded(value => !value) }}
+                      >
+                        <span className={css.floatingChatLead} aria-hidden="true">
+                          <IconHistoryOutline16 size={14} />
+                        </span>
+                        <span className={css.floatingChatTitle}>{t('chatPreview')}</span>
+                        <span className={css.floatingChatProgress} />
+                        <span className={css.floatingChatChevron} aria-hidden="true">
+                          {chatExpanded ? <IconChevronDownOutline14 /> : <IconChevronUpOutline14 />}
+                        </span>
+                      </button>
                     </div>
-                    <span className={css.floatingChatToggle}>
-                      {chatExpanded ? <IconChevronDown16 size={14} /> : <IconChevronUp16 size={14} />}
-                    </span>
-                  </button>
+                  </section>
                 )}
                 <Tooltip label={t('collapseChat')} side="top" delayMs={500}>
                   <button
@@ -1437,7 +1448,7 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
                     }}
                     aria-label={t('collapseChat')}
                   >
-                    <IconChevronDown16 size={12} />
+                    <IconChevronDownOutline14 />
                   </button>
                 </Tooltip>
               </>,
