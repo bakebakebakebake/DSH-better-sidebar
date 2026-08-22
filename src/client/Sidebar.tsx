@@ -269,8 +269,20 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
     const onToggle = (): void => {
       store.reduce(togglePanel)
     }
+    const onToggleBottom = (): void => {
+      store.reduce(toggleBottomPanel)
+    }
+    const onToggleMaximize = (): void => {
+      setSidebarMaximized(prev => !prev)
+    }
     window.addEventListener('dsh-toggle-better-sidebar', onToggle)
-    return () => { window.removeEventListener('dsh-toggle-better-sidebar', onToggle) }
+    window.addEventListener('dsh-toggle-better-bottom', onToggleBottom)
+    window.addEventListener('dsh-toggle-better-maximize', onToggleMaximize)
+    return () => {
+      window.removeEventListener('dsh-toggle-better-sidebar', onToggle)
+      window.removeEventListener('dsh-toggle-better-bottom', onToggleBottom)
+      window.removeEventListener('dsh-toggle-better-maximize', onToggleMaximize)
+    }
   }, [store])
 
   // Title-bar / shell compatibility (the "位置兼容模式" scheme):
@@ -525,6 +537,33 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
     setChatExpanded(false)
     setChatFolded(false)
   }, [sessionId])
+
+  useEffect(() => {
+    const onCollapseFloatingChat = (): void => {
+      setChatExpanded(false)
+      setChatFolded(true)
+    }
+    const onExpandFloatingChat = (): void => {
+      setChatFolded(false)
+    }
+    const onToggleFloatingChat = (): void => {
+      setChatFolded(prev => {
+        if (!prev) {
+          setChatExpanded(false)
+          return true
+        }
+        return false
+      })
+    }
+    window.addEventListener('dsh-collapse-floating-chat', onCollapseFloatingChat)
+    window.addEventListener('dsh-expand-floating-chat', onExpandFloatingChat)
+    window.addEventListener('dsh-toggle-floating-chat', onToggleFloatingChat)
+    return () => {
+      window.removeEventListener('dsh-collapse-floating-chat', onCollapseFloatingChat)
+      window.removeEventListener('dsh-expand-floating-chat', onExpandFloatingChat)
+      window.removeEventListener('dsh-toggle-floating-chat', onToggleFloatingChat)
+    }
+  }, [])
 
   useEffect(() => {
     if (!hasChatHistory) setChatExpanded(false)
