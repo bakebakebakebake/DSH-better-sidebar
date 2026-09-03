@@ -556,11 +556,25 @@ export function createBetterSidebarService(store: SidebarStore): BetterSidebarSe
 
   const getTabs = (): readonly TabDescriptor[] => Array.from(tabs.values())
   const getFileViewers = (): readonly FileViewerDescriptor[] => Array.from(viewers.values())
-  const getTab = (id: string): TabDescriptor | undefined => tabs.get(id)
+  const getTab = (id: string): TabDescriptor | undefined => {
+    const direct = tabs.get(id)
+    if (direct !== undefined) return direct
+    // Tab aliases for compatibility across plugins and stored states
+    if (id === 'agent-team' || id === 'agent-teams') {
+      return tabs.get('agent-teams') ?? tabs.get('agent-team')
+    }
+    if (id === 'agent-browser' || id === 'ego-browser' || id === 'ego-browser:watch') {
+      return tabs.get('ego-browser:watch') ?? tabs.get('agent-browser') ?? tabs.get('ego-browser')
+    }
+    return undefined
+  }
 
   // The enable switches come from the user's side card prefs (the shared
   // store the service is bound to): an absent key means enabled.
-  const isTabEnabled = (id: string): boolean => store.getPrefs().tabsEnabled[id] !== false
+  const isTabEnabled = (id: string): boolean => {
+    const canonical = getTab(id)?.id ?? id
+    return store.getPrefs().tabsEnabled[id] !== false && store.getPrefs().tabsEnabled[canonical] !== false
+  }
   const isViewerEnabled = (id: string): boolean => store.getPrefs().viewersEnabled[id] !== false
 
   const matchFileViewer = (path: string, head?: Uint8Array): FileViewerDescriptor | undefined => {

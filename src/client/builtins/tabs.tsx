@@ -24,7 +24,7 @@ import { api } from '../api.ts'
 import { BrowserView } from '../BrowserView.tsx'
 import { IconTerminalOutline16, IconDiffOutline16, IconGlobeOutline16, IconFloatWindowOutline16, IconPanelBottomOutline16 } from '../icons.tsx'
 import { TERMINAL_FONT_SIZE_MAX, TERMINAL_FONT_SIZE_MIN } from '../../prefs-shared.ts'
-import type { ComponentType } from 'react'
+import { useState, useCallback, useEffect, type ComponentType } from 'react'
 import type { SessionScope } from '../api.ts'
 import type { SidebarStore } from '../state.ts'
 import type { TabDescriptor } from '../service.ts'
@@ -77,7 +77,68 @@ function uiTerminalCount(state: SidebarState): number {
     .filter(tab => tab.type === 'terminal' && !isAgentTabId(tab.id)).length
 }
 
-/** The 6 built-in tab descriptors. */
+function AgentBrowserFallbackView() {
+  const [spaces, setSpaces] = useState<{ activeSession?: boolean; url?: string } | null>(null)
+
+  const fetchStatus = useCallback(async () => {
+    try {
+      const res = await fetch('/api/ego/spaces', { cache: 'no-store' })
+      if (res.ok) {
+        const data = await res.json()
+        setSpaces(data)
+      }
+    } catch {}
+  }, [])
+
+  useEffect(() => {
+    void fetchStatus()
+    const timer = setInterval(fetchStatus, 3000)
+    return () => clearInterval(timer)
+  }, [fetchStatus])
+
+  return (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', height: '100%', boxSizing: 'border-box' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '13px' }}>
+          <IconGlobeOutline16 size={16} />
+          <span>Agent 浏览器 · 实时视口</span>
+        </div>
+        <span style={{
+          fontSize: '11px',
+          color: spaces?.activeSession ? '#10b981' : 'var(--ds-color-text-secondary)',
+          background: 'var(--ds-color-fill-secondary, rgba(0,0,0,0.04))',
+          padding: '2px 8px',
+          borderRadius: '10px'
+        }}>
+          {spaces?.activeSession ? '● 正在运行' : '○ 空闲'}
+        </span>
+      </div>
+
+      <div style={{
+        border: '1px solid var(--ds-color-border, rgba(0,0,0,0.08))',
+        borderRadius: '8px',
+        padding: '12px',
+        background: 'var(--ds-color-bg-container, var(--ds-color-bg-base))',
+        fontSize: '12px',
+        lineHeight: 1.6,
+        color: 'var(--ds-color-text-secondary)'
+      }}>
+        <div style={{ fontWeight: 500, color: 'var(--ds-color-text, inherit)', marginBottom: '4px' }}>
+          Headless Chrome 自动化监控
+        </div>
+        当智能体调用浏览器相关工具（打开网页、点击、填表等）时，此处将实时串流呈现浏览器画面与人机交互视口。
+      </div>
+
+      {spaces?.url && (
+        <div style={{ fontSize: '11px', wordBreak: 'break-all', color: 'var(--ds-color-text-tertiary)' }}>
+          当前页面: {spaces.url}
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** The built-in tab descriptors. */
 export function builtinTabs(ctx: Context, options: BuiltinTabOptions = {}): readonly TabDescriptor[] {
   return [
     {
@@ -384,6 +445,14 @@ export function builtinTabs(ctx: Context, options: BuiltinTabOptions = {}): read
         tab.diff === undefined ? null
           : <DiffTab sessionId={scope.sessionId} cwd={scope.cwd} diff={tab.diff} />
       ),
+    },
+    {
+      id: 'agent-browser',
+      title: () => 'Agent 浏览器',
+      icon: (size: number) => <IconGlobeOutline16 size={size} />,
+      order: 70,
+      single: true,
+      component: () => <AgentBrowserFallbackView />,
     },
   ]
 }

@@ -184,7 +184,7 @@ export function GitLens(props: GitLensProps) {
         return
       }
       silentTickCount.current = 0
-      const listed = await api.gitWorktrees(scope)
+      const listed = (await api.gitWorktrees(scope)) ?? []
       if (generation !== refreshGeneration.current) return
       setWorktrees(listed)
       const selectedStillExists = listed.some(entry => entry.path === chosenPathRef.current)

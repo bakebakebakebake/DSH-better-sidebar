@@ -137,6 +137,23 @@ export function apply(ctx: Context): void {
   // are ready by the time the sidebar renders.
   const service = createBetterSidebarService(sidebarStore)
   ctx.provide('betterSidebar', service)
+  if (typeof window !== 'undefined') {
+    ;(window as any).__betterSidebar = service
+    const handleOpenTab = (e: Event): void => {
+      const detail = (e as CustomEvent)?.detail
+      if (detail && typeof detail.type === 'string') {
+        service.openTab(detail, detail.scope)
+        const snap = service.getSnapshot()
+        if (snap.state && !snap.state.panelOpen) {
+          sidebarStore.reduce(s => ({ ...s, panelOpen: true }))
+        }
+        if (detail.path) {
+          service.updateTab(detail.id ?? detail.type, { path: detail.path })
+        }
+      }
+    }
+    window.addEventListener('dsh-better-sidebar-open-tab', handleOpenTab)
+  }
   // Terminal tab titles use the host's effective shell name (e.g. bash/zsh)
   // instead of "Terminal 1". Start with a safe fallback and replace it as
   // soon as the host shell info resolves. Tabs created before the response
