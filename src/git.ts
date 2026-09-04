@@ -59,6 +59,8 @@ export interface GitLogEntry {
   date: string
   /** Ref decorations (`%D` with --decorate=short), e.g. `HEAD -> main, origin/main`; '' when none. */
   refs: string
+  /** Parent commit hashes (for git topology graph lanes). */
+  parents?: string[]
 }
 
 /** One git failure (stderr text as the message). */
@@ -137,12 +139,12 @@ export function parseWorktreeList(output: string): GitWorktreeRecord[] {
   return rows
 }
 
-/** Parse `git log --pretty=format:%h%x1f%s%x1f%an%x1f%ai%x1f%H%x1f%D` rows. */
+/** Parse `git log --pretty=format:%h%x1f%s%x1f%an%x1f%ai%x1f%H%x1f%D%x1f%P` rows. */
 export function parseLogLines(output: string): GitLogEntry[] {
   const rows: GitLogEntry[] = []
-  for (const line of output.split('\n')) {
+  for (const line of output.split(/\r?\n/)) {
     if (line === '') continue
-    const [hash, subject, author, date, hashFull, refs] = line.split('\x1f')
+    const [hash, subject, author, date, hashFull, refs, parentsRaw] = line.split('\x1f')
     if (hash === undefined || subject === undefined) continue
     rows.push({
       hash,
@@ -151,6 +153,7 @@ export function parseLogLines(output: string): GitLogEntry[] {
       date: date ?? '',
       hashFull: hashFull ?? hash,
       refs: refs ?? '',
+      parents: parentsRaw ? parentsRaw.trim().split(/\s+/).filter(Boolean) : [],
     })
   }
   return rows
@@ -421,8 +424,8 @@ export async function checkout(cwd: string, branch: string, selected?: string): 
 /** Recent commit history (newest first), lazily pageable via skip/count. */
 export async function log(cwd: string, count = 30, skip = 0, selected?: string): Promise<GitLogEntry[]> {
   const raw = await runGit(await repoRoot(cwd, selected), [
-    'log', '-n', String(count), '--skip', String(skip), '--decorate=short',
-    '--pretty=format:%h%x1f%s%x1f%an%x1f%ai%x1f%H%x1f%D',
+    'log', '--all', '--topo-order', '-n', String(count), '--skip', String(skip), '--decorate=short',
+    '--pretty=format:%h%x1f%s%x1f%an%x1f%ai%x1f%H%x1f%D%x1f%P',
   ])
   return parseLogLines(raw)
 }

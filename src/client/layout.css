@@ -70,7 +70,198 @@
    under the center column. The Sidebar shell toggles the body attribute with
    the panel open state. */
 body[data-dsh-sidebar-collapsed] [data-slot="conversation.session.header"] > header {
-  padding-right: 78px;
+  padding-right: 114px;
+}
+
+/* ── Codex-like Maximized Mode Stacking & Floating Chat ──────────── */
+
+/* Elevate #root above the maximized panel without blocking panel clicks */
+body[data-dsh-sidebar-maximized] #root,
+body[data-dsh-sidebar-maximized]:is([data-dsh-desktop-mode="compatibility"], [data-dsh-desktop-mode="extended"], [data-dsh-desktop-mode="advanced"]) #root {
+  z-index: 50 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  transform: none !important;
+  overflow: visible !important;
+}
+
+body[data-dsh-sidebar-maximized] #root,
+body[data-dsh-sidebar-maximized] #root > div,
+body[data-dsh-sidebar-maximized] #root [class*="frame"],
+body[data-dsh-sidebar-maximized] #root [class*="centerCol"],
+body[data-dsh-sidebar-maximized] #root [class*="ConversationSurface"],
+body[data-dsh-sidebar-maximized] #root [data-pane="conversation"],
+body[data-dsh-sidebar-maximized] #root [data-slot="conversation"],
+body[data-dsh-sidebar-maximized] #root [data-slot="conversation"] > div,
+body[data-dsh-sidebar-maximized] #root [class*="wSkVaW_root"],
+body[data-dsh-sidebar-maximized] #root [data-pane="details"],
+body[data-dsh-sidebar-maximized] #root [data-slot="details"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  contain: none !important;
+  pointer-events: none !important;
+}
+
+body[data-dsh-sidebar-maximized] #root {
+  pointer-events: none !important;
+}
+
+/* The host app's left navigation remains usable while a better-sidebar pane
+   is maximized. The root stays non-hit-testable so the fixed panel below it
+   still receives clicks; these explicit selectors restore the native sidebar. */
+body[data-dsh-sidebar-maximized] #root [data-pane="sidebar"],
+body[data-dsh-sidebar-maximized] #root [data-slot="sidebar"],
+body[data-dsh-sidebar-maximized] #root [data-slot*="sidebar"],
+body[data-dsh-sidebar-maximized] #root [class*="sidebarCol"],
+body[data-dsh-sidebar-maximized] #root [class*="sidebarCol"] * {
+  pointer-events: auto !important;
+}
+
+body[data-dsh-sidebar-maximized] [data-composer-seat],
+body[data-dsh-sidebar-maximized] [data-slot="conversation.session"] {
+  pointer-events: auto !important;
+}
+
+/* Hide the native session header while the sidebar owns the conversation
+   controls. The message stream is handled separately below so its layout
+   cannot affect the fixed composer seat. */
+body[data-dsh-sidebar-maximized] [data-slot="conversation.session.header"] {
+  display: none !important;
+}
+
+body[data-dsh-sidebar-maximized]:not([data-dsh-chat-expanded]) [data-slot="conversation.session"] {
+  display: none !important;
+}
+
+/* Floating conversation history card above the composer in maximized mode */
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] {
+  display: flex !important;
+  flex-direction: column !important;
+  position: fixed !important;
+  bottom: calc(
+    var(--dsh-composer-bottom, 20px) +
+    var(--dsh-composer-height, 120px) +
+    10px
+  ) !important;
+  left: calc(50% + var(--dsh-workspace-left, 0px) / 2) !important;
+  transform: translateX(-50%) !important;
+  width: min(748px, calc(100vw - 320px)) !important;
+  max-width: min(748px, calc(100vw - 320px)) !important;
+  height: 420px !important;
+  max-height: 52vh !important;
+  min-height: 120px !important;
+  box-sizing: border-box !important;
+  flex: none !important;
+  margin: 0 !important;
+  z-index: 50 !important;
+  background: var(--dsw-alias-bg-layer-1) !important;
+  background-color: var(--dsw-alias-bg-layer-1) !important;
+  border: 1px solid var(--dsw-alias-border-l2) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.28) !important;
+  overflow: hidden !important;
+  padding: 0 !important;
+  pointer-events: auto !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] > div,
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [data-slot="conversation.view"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="viewArea"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="_root"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="_scroll"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="ChatView_root"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="ChatView_scroll"] {
+  height: 100% !important;
+  max-height: 100% !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [class*="column"],
+body[data-dsh-sidebar-maximized][data-dsh-chat-expanded] [data-slot="conversation.session"] [data-chat-flow] {
+  padding: 16px 20px 24px !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* Floating conversation input bar in Codex-like maximized sidebar mode */
+body[data-dsh-sidebar-maximized] [data-composer-seat] {
+  position: fixed !important;
+  bottom: 20px !important;
+  left: calc(50% + var(--dsh-workspace-left, 0px) / 2) !important;
+  transform: translateX(-50%) !important;
+  transform-origin: bottom center !important;
+  z-index: 50 !important;
+  width: min(720px, calc(100vw - 320px)) !important;
+  max-width: min(720px, calc(100vw - 320px)) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  padding: 0 !important;
+  pointer-events: auto !important;
+  transition:
+    transform var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    opacity var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    width var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+/* Ensure inner composer stack and card fill the seat without double-transform */
+body[data-dsh-sidebar-maximized] [data-composer-seat] [class*="composerStack"],
+body[data-dsh-sidebar-maximized] [data-composer-seat] [class*="composerBar"] {
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+body[data-dsh-sidebar-maximized] [data-composer-seat] [data-composer-card] {
+  position: static !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  background: var(--dsw-specific-input-major, var(--dsw-alias-bg-layer-1)) !important;
+  background-color: var(--dsw-specific-input-major, var(--dsw-alias-bg-layer-1)) !important;
+}
+
+/* The composer slot host is display:contents in DSH. Keep it transparent so
+   it cannot become a second white shell around the actual input card. */
+body[data-dsh-sidebar-maximized] [data-composer-seat] > [data-slot="conversation.composer"] {
+  display: contents !important;
+  position: static !important;
+  transform: none !important;
+  width: auto !important;
+  max-width: none !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+/* Hide the stats/metrics row below composer in maximized sidebar mode */
+body[data-dsh-sidebar-maximized] [data-composer-seat] [class*="StatsLine"],
+body[data-dsh-sidebar-maximized] [data-composer-seat] [class*="FJxK0a_root"] {
+  display: none !important;
+}
+
+/* When fully folded to bottom DeepSeek tab, smoothly collapse down to the fish pill anchor */
+body[data-dsh-sidebar-maximized][data-dsh-chat-folded] [data-composer-seat] {
+  transform: translateX(-50%) translateY(16px) scale(0.85) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 body[data-dsh-sidebar-dragging] #root [data-dsh-frame],

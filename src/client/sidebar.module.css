@@ -172,6 +172,17 @@
     width var(--ds-transition-duration-slow) var(--ds-ease-in-out);
 }
 
+.panelMaximized {
+  z-index: 44 !important;
+  left: var(--dsh-workspace-left, 56px) !important;
+  right: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+  transition:
+    left var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    transform var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
 /* Collapsed: slid off-screen, interactive nothing, hidden after the slide. */
 .panelHidden {
   transform: translateX(102%);
@@ -2602,4 +2613,173 @@ body[data-dsh-sidebar-dragging] .bottomPanel {
 .tocFlash {
   animation: dsh-toc-flash 1.2s ease-out;
   border-radius: 4px;
+}
+
+/* ── Floating Chat Controls in Codex-like Maximized Mode ───────────── */
+
+.floatingChatHeader {
+  box-sizing: border-box;
+  width: calc(
+    100% - var(--dsh-composer-side-clearance, 16px) - var(--dsh-composer-side-clearance, 16px) -
+    var(--dsh-composer-dock-inset, 8px) - var(--dsh-composer-dock-inset, 8px) -
+    var(--dsh-composer-dock-inset, 8px) - var(--dsh-composer-dock-inset, 8px)
+  );
+  max-width: calc(
+    var(--dsh-composer-card-max-width, 780px) -
+    var(--dsh-composer-dock-inset, 8px) - var(--dsh-composer-dock-inset, 8px) -
+    var(--dsh-composer-dock-inset, 8px) - var(--dsh-composer-dock-inset, 8px)
+  );
+  border: 1px solid var(--dsw-alias-border-l1);
+  background: var(--dsw-specific-tip, var(--dsw-alias-interactive-bg-hover));
+  border-radius: 12px;
+  flex: none;
+  margin: 0 auto;
+  overflow: hidden;
+  order: -1;
+  pointer-events: auto;
+  transition:
+    background var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    border-color var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.floatingChatHeader:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  border-color: var(--dsw-alias-border-l2);
+}
+
+.floatingChatHeaderExpanded {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.floatingChatBody {
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 12px;
+  display: flex;
+}
+
+.floatingChatButton {
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  display: flex;
+  user-select: none;
+}
+
+.floatingChatLead {
+  color: var(--dsw-alias-label-tertiary);
+  flex: none;
+  place-items: center;
+  display: grid;
+  width: 16px;
+  height: 16px;
+}
+
+.floatingChatTitle {
+  color: var(--dsw-alias-label-primary);
+  flex: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 24px;
+}
+
+.floatingChatProgress {
+  min-width: 0;
+  color: var(--dsw-alias-label-tertiary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: auto;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 20px;
+  overflow: hidden;
+}
+
+.floatingChatChevron {
+  color: var(--dsw-alias-label-tertiary);
+  flex: none;
+  place-items: center;
+  display: grid;
+  width: 14px;
+  height: 14px;
+}
+
+.floatingBottomFoldHandle {
+  position: absolute;
+  top: -10px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 20px;
+  border-radius: 10px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+  z-index: 52;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  transition:
+    background var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    color var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    transform var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.floatingBottomFoldHandle:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+  transform: translateY(-1px);
+}
+
+.floatingDeepSeekPill {
+  position: fixed;
+  bottom: 16px;
+  left: calc(50% + var(--dsh-workspace-left, 0px) / 2);
+  transform: translateX(-50%);
+  transform-origin: bottom center;
+  z-index: 52;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 34px;
+  padding: 0;
+  border-radius: 17px;
+  border: 1px solid var(--dsw-alias-border-l2);
+  background: var(--dsw-alias-bg-layer-1);
+  background-color: var(--dsw-alias-bg-layer-1);
+  color: var(--dsw-alias-brand-primary, #3b82f6);
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+  animation: dshFishPillIn var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+  transition:
+    transform var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    background var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    color var(--ds-transition-duration-slow) var(--ds-ease-in-out),
+    box-shadow var(--ds-transition-duration-slow) var(--ds-ease-in-out);
+}
+
+.floatingDeepSeekPill:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  transform: translateX(-50%) translateY(-2px) scale(1.06);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+}
+
+@keyframes dshFishPillIn {
+  from {
+    transform: translateX(-50%) translateY(8px) scale(0.85);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
 }

@@ -222,11 +222,37 @@
    (badges live on the second line so they never crowd the subject). */
 .gitLogRow {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 5px 12px;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 12px;
   cursor: pointer;
   border-radius: 8px;
+  height: 48px;
+  min-height: 48px;
+  box-sizing: border-box;
+}
+
+.gitGraphCol {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  position: relative;
+  overflow: visible;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+}
+
+.gitLogContent {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 0 6px 8px;
+  overflow: hidden;
 }
 
 .gitLogRow:hover {

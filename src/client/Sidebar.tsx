@@ -29,9 +29,12 @@
  * the right tree.
  */
 import { createElement, memo, useCallback, useEffect, useMemo, useRef, useState, type DragEvent as ReactDragEvent, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { useSyncExternalStore } from 'react'
 import clsx from 'clsx'
-import { IconCloseFill14, Tooltip } from '@deepseek-ai/dsh-client-ui-primitives'
+import {
+  FishLogo, IconChevronDownOutline14, IconChevronUpOutline14, IconCloseFill14, Tooltip,
+} from '@deepseek-ai/dsh-client-ui-primitives'
 import type { Context, SidebarSessionList } from '../context-types.ts'
 import { appendToDraft, insertFileReference } from './conversation-draft.ts'
 import {
@@ -43,7 +46,10 @@ import {
 } from './state.ts'
 import { collectPinnedTabs, createPinnedVirtualTab, getPinnedHomeScope, injectPinnedIntoTree, isPinnedVirtualId, isPinnedVirtualTab, parsePinnedVirtualId, type PinnedTabEntry } from './pinned.ts'
 import { IconPinOutline16 } from './icons.tsx'
-import { IconPanelBottomOutline16, IconPanelRightOutline16 } from './icons.tsx'
+import {
+  IconHistoryOutline16, IconPanelBottomOutline16, IconPanelRightOutline16,
+  IconSidebarMaximizeOutline16, IconSidebarRestoreOutline16,
+} from './icons.tsx'
 import { Workbench, type WorkbenchActions } from './split-pane.tsx'
 import { isNarrowWidth, useViewportSize } from './breakpoints.ts'
 import { layoutPushSize } from './layout-push.ts'
@@ -323,6 +329,164 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
     else document.body.removeAttribute('data-dsh-sidebar-collapsed')
     return () => { document.body.removeAttribute('data-dsh-sidebar-collapsed') }
   }, [collapsed])
+
+  const hasChatHistory = sessionId !== undefined && sessionList.byId[sessionId]?.blank !== true
+  const [sidebarMaximized, setSidebarMaximized] = useState(false)
+  const [chatExpanded, setChatExpanded] = useState(false)
+  const [chatFolded, setChatFolded] = useState(false)
+
+  const isRightMaximized = sidebarMaximized && (state?.panelOpen ?? false)
+
+  useEffect(() => {
+    const onToggle = (): void => {
+      store.reduce(togglePanel)
+    }
+    const onToggleBottom = (): void => {
+      store.reduce(toggleBottomPanel)
+    }
+    const onToggleMaximize = (): void => {
+      setSidebarMaximized(prev => !prev)
+    }
+    window.addEventListener('dsh-toggle-better-sidebar', onToggle)
+    window.addEventListener('dsh-toggle-better-bottom', onToggleBottom)
+    window.addEventListener('dsh-toggle-better-maximize', onToggleMaximize)
+    return () => {
+      window.removeEventListener('dsh-toggle-better-sidebar', onToggle)
+      window.removeEventListener('dsh-toggle-better-bottom', onToggleBottom)
+      window.removeEventListener('dsh-toggle-better-maximize', onToggleMaximize)
+    }
+  }, [store])
+
+  const savedSessionTabRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    setChatExpanded(false)
+    setChatFolded(false)
+    savedSessionTabRef.current = null
+  }, [sessionId])
+
+  useEffect(() => {
+    const onCollapseFloatingChat = (): void => {
+      setChatExpanded(false)
+      setChatFolded(true)
+    }
+    const onExpandFloatingChat = (): void => {
+      setChatFolded(false)
+    }
+    const onToggleFloatingChat = (): void => {
+      setChatFolded(prev => {
+        if (!prev) {
+          setChatExpanded(false)
+          return true
+        }
+        return false
+      })
+    }
+    window.addEventListener('dsh-collapse-floating-chat', onCollapseFloatingChat)
+    window.addEventListener('dsh-expand-floating-chat', onExpandFloatingChat)
+    window.addEventListener('dsh-toggle-floating-chat', onToggleFloatingChat)
+    return () => {
+      window.removeEventListener('dsh-collapse-floating-chat', onCollapseFloatingChat)
+      window.removeEventListener('dsh-expand-floating-chat', onExpandFloatingChat)
+      window.removeEventListener('dsh-toggle-floating-chat', onToggleFloatingChat)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!hasChatHistory) setChatExpanded(false)
+  }, [hasChatHistory])
+
+  useEffect(() => {
+    if (isRightMaximized) {
+      document.body.setAttribute('data-dsh-sidebar-maximized', '')
+      setChatFolded(true)
+      setChatExpanded(false)
+      const tabs = Array.from(document.querySelectorAll<HTMLElement>('[data-slot="conversation.session.header"] [role="tab"]'))
+      const activeTab = tabs.find(tabEl => tabEl.getAttribute('aria-selected') === 'true' || tabEl.classList.contains('wSkVaW_tabActive'))
+      const activeText = activeTab?.textContent?.trim()
+      if (activeText && activeText !== '对话' && !activeText.includes('对话') && !activeText.toLowerCase().includes('conversation')) {
+        savedSessionTabRef.current = activeText
+        const chatTab = tabs.find(tabEl => tabEl.textContent?.trim() === '对话' || tabEl.textContent?.includes('对话') || tabEl.textContent?.toLowerCase().includes('conversation'))
+        chatTab?.click()
+      }
+    } else {
+      setChatFolded(false)
+      setChatExpanded(false)
+      document.body.removeAttribute('data-dsh-sidebar-maximized')
+      document.body.removeAttribute('data-dsh-chat-expanded')
+      document.body.removeAttribute('data-dsh-chat-folded')
+      if (savedSessionTabRef.current !== null) {
+        const targetText = savedSessionTabRef.current
+        savedSessionTabRef.current = null
+        const tabs = Array.from(document.querySelectorAll<HTMLElement>('[data-slot="conversation.session.header"] [role="tab"]'))
+        const targetTab = tabs.find(t => t.textContent?.trim() === targetText)
+        targetTab?.click()
+      }
+    }
+    return () => {
+      document.body.removeAttribute('data-dsh-sidebar-maximized')
+      document.body.removeAttribute('data-dsh-chat-expanded')
+      document.body.removeAttribute('data-dsh-chat-folded')
+    }
+  }, [isRightMaximized, hasChatHistory, t])
+
+  useEffect(() => {
+    if (isRightMaximized && chatExpanded) document.body.setAttribute('data-dsh-chat-expanded', '')
+    else document.body.removeAttribute('data-dsh-chat-expanded')
+    return () => { document.body.removeAttribute('data-dsh-chat-expanded') }
+  }, [isRightMaximized, chatExpanded])
+
+  useEffect(() => {
+    if (!isRightMaximized || !chatExpanded) return
+    const scrollBottom = (): void => {
+      const session = document.querySelector('[data-slot="conversation.session"]')
+      if (!session) return
+      const scrollable = session.querySelector('[class*="viewArea"], [class*="_scroll"], [data-chat-flow]') as HTMLElement | null
+      if (scrollable) {
+        scrollable.scrollTop = scrollable.scrollHeight
+      }
+    }
+    const timer = setTimeout(scrollBottom, 50)
+    return () => { clearTimeout(timer) }
+  }, [isRightMaximized, chatExpanded])
+
+  useEffect(() => {
+    if (isRightMaximized && chatFolded) document.body.setAttribute('data-dsh-chat-folded', '')
+    else document.body.removeAttribute('data-dsh-chat-folded')
+    return () => { document.body.removeAttribute('data-dsh-chat-folded') }
+  }, [isRightMaximized, chatFolded])
+
+  const [composerSeatEl, setComposerSeatEl] = useState<HTMLElement | null>(null)
+  useEffect(() => {
+    if (!isRightMaximized) {
+      setComposerSeatEl(null)
+      return
+    }
+    const update = (): void => {
+      setComposerSeatEl(document.querySelector('[data-composer-seat]') as HTMLElement | null)
+    }
+    update()
+    const observer = new MutationObserver(update)
+    observer.observe(document.body, { childList: true, subtree: true })
+    return () => { observer.disconnect() }
+  }, [isRightMaximized])
+
+  useEffect(() => {
+    if (!isRightMaximized || composerSeatEl === null) return
+    const updateComposerMetrics = (): void => {
+      const rect = composerSeatEl.getBoundingClientRect()
+      const bottom = Math.max(0, window.innerHeight - rect.bottom)
+      document.body.style.setProperty('--dsh-composer-height', `${rect.height}px`)
+      document.body.style.setProperty('--dsh-composer-bottom', `${bottom}px`)
+    }
+    updateComposerMetrics()
+    window.addEventListener('resize', updateComposerMetrics)
+    return () => {
+      window.removeEventListener('resize', updateComposerMetrics)
+      document.body.style.removeProperty('--dsh-composer-height')
+      document.body.style.removeProperty('--dsh-composer-bottom')
+    }
+  }, [composerSeatEl, isRightMaximized])
 
   // Title-bar / shell compatibility (the "位置兼容模式" scheme):
   //   auto    — CONSERVATIVE: only the standard Window Controls Overlay
@@ -1188,7 +1352,7 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
   // On NARROW viewports the drawer FLOATS over the app shell — no push, the
   // conversation keeps the full width behind the drawer.
   useEffect(() => {
-    const { width, height } = layoutPushSize({
+    const { width: normalWidth, height } = layoutPushSize({
       narrow,
       panelOpen: snapshot.state?.panelOpen === true,
       bottomOpen: snapshot.state?.bottomOpen === true,
@@ -1197,11 +1361,12 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
       viewportWidth: viewport.width,
       viewportHeight: layoutViewportHeight,
     })
+    const width = isRightMaximized ? 0 : normalWidth
     const bottomPush = !narrow && snapshot.state?.bottomOpen === true
       ? height + keyboardInset
       : 0
     writeGeometry(width, bottomPush)
-  }, [narrow, snapshot.state?.panelOpen, snapshot.state?.width, snapshot.state?.bottomOpen, snapshot.state?.bottomHeight, viewport.width, layoutViewportHeight, keyboardInset])
+  }, [narrow, snapshot.state?.panelOpen, snapshot.state?.width, snapshot.state?.bottomOpen, snapshot.state?.bottomHeight, viewport.width, layoutViewportHeight, keyboardInset, isRightMaximized])
   // Unmount must release the push (issue #31): when the boundary swaps the
   // whole sidebar after a render crash (or the plugin fiber is disposed /
   // HMR), the CSS variables would otherwise stay on <html> and layout.css
@@ -1535,6 +1700,20 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
         so the tabs genuinely yield space to it.
       */}
       <div className={css.toggleCluster} data-dsh-toggle-cluster>
+        {state.panelOpen && !narrow && (
+          <Tooltip label={isRightMaximized ? t('restoreSidebar') : t('maximizeSidebar')} side="bottom" delayMs={500}>
+            <button
+              type="button"
+              className={clsx(css.toggleButton, isRightMaximized && css.toggleButtonActive)}
+              aria-label={isRightMaximized ? t('restoreSidebar') : t('maximizeSidebar')}
+              onClick={() => {
+                setSidebarMaximized(prev => !prev)
+              }}
+            >
+              {isRightMaximized ? <IconSidebarRestoreOutline16 /> : <IconSidebarMaximizeOutline16 />}
+            </button>
+          </Tooltip>
+        )}
         {/*
           Narrow viewports merge the two workbenches into the one drawer —
           there is no bottom panel, so its toggle button is not offered.
@@ -1556,7 +1735,12 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
             type="button"
             className={css.toggleButton}
             aria-label={state.panelOpen ? t('collapse') : t('expand')}
-            onClick={() => { store.reduce(togglePanel) }}
+            onClick={() => {
+              if (state.panelOpen) {
+                setSidebarMaximized(false)
+              }
+              store.reduce(togglePanel)
+            }}
           >
             <IconPanelRightOutline16 />
           </button>
@@ -1573,10 +1757,12 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
       */}
       <div
         ref={panelRef}
-        className={clsx(css.panel, !state.panelOpen && css.panelHidden)}
+        className={clsx(css.panel, !state.panelOpen && css.panelHidden, isRightMaximized && css.panelMaximized)}
         data-dsh-panel
         style={{
-          width: narrow ? '100vw' : Math.min(state.width, window.innerWidth),
+          width: narrow
+            ? '100vw'
+            : (isRightMaximized ? Math.max(0, window.innerWidth - centerRectRef.current.left) : Math.min(state.width, window.innerWidth)),
           // Narrow drawer: keep the bottom-anchored sheet above the on-screen
           // keyboard (visualViewport inset); desktop panels are full-height
           // and unaffected.
@@ -1592,6 +1778,7 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
               onPointerDown={(event) => {
                 event.preventDefault()
                 event.currentTarget.setPointerCapture(event.pointerId)
+                if (sidebarMaximized) setSidebarMaximized(false)
                 dragCommitted.current = false
                 widthDrag.current = { startX: event.clientX, startWidth: state.width }
                 setDraggingWidth(true)
@@ -1790,6 +1977,66 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
           />
         </div>
       </div>
+      )}
+      {isRightMaximized && (
+        <>
+          {chatFolded ? (
+            <Tooltip label={t('expandChat')} side="top" delayMs={300}>
+              <button
+                type="button"
+                className={css.floatingDeepSeekPill}
+                onClick={() => { setChatFolded(false) }}
+                aria-label={t('expandChat')}
+              >
+                <FishLogo size={18} />
+              </button>
+            </Tooltip>
+          ) : composerSeatEl !== null ? (
+            createPortal(
+              <>
+                {hasChatHistory && (
+                  <section
+                    className={clsx(css.floatingChatHeader, chatExpanded && css.floatingChatHeaderExpanded)}
+                    data-testid="floating-chat-header"
+                    aria-label={t('chatPreview')}
+                  >
+                    <div className={css.floatingChatBody}>
+                      <button
+                        type="button"
+                        className={css.floatingChatButton}
+                        aria-expanded={chatExpanded}
+                        onClick={() => { setChatExpanded(value => !value) }}
+                      >
+                        <span className={css.floatingChatLead} aria-hidden="true">
+                          <IconHistoryOutline16 size={14} />
+                        </span>
+                        <span className={css.floatingChatTitle}>{t('chatPreview')}</span>
+                        <span className={css.floatingChatProgress} />
+                        <span className={css.floatingChatChevron} aria-hidden="true">
+                          {chatExpanded ? <IconChevronDownOutline14 /> : <IconChevronUpOutline14 />}
+                        </span>
+                      </button>
+                    </div>
+                  </section>
+                )}
+                <Tooltip label={t('collapseChat')} side="top" delayMs={500}>
+                  <button
+                    type="button"
+                    className={css.floatingBottomFoldHandle}
+                    onClick={() => {
+                      setChatExpanded(false)
+                      setChatFolded(true)
+                    }}
+                    aria-label={t('collapseChat')}
+                  >
+                    <IconChevronDownOutline14 />
+                  </button>
+                </Tooltip>
+              </>,
+              composerSeatEl,
+            )
+          ) : null}
+        </>
       )}
       {/*
         Free windows: tabs dragged out onto the conversation area (or floated

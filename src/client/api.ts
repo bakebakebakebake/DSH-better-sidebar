@@ -88,6 +88,8 @@ export interface GitLogEntry {
   date: string
   /** Ref decorations (--decorate=short), e.g. `HEAD -> main, origin/main`; '' when none. */
   refs: string
+  /** Parent commit hashes (for git topology graph lanes). */
+  parents?: string[]
 }
 
 /** Text read result. */

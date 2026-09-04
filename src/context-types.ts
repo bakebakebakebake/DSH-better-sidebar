@@ -145,6 +145,8 @@ export interface SidebarSessionSummary {
   parentId?: string
   /** Whether the session's agent is currently running. */
   running?: boolean
+  /** Whether the session has no recorded turns yet. */
+  blank?: boolean
 }
 
 /** One healthy subagent catalog child row (structural mirror of the runtime). */
