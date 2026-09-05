@@ -403,30 +403,110 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
       setChatFolded(true)
       setChatExpanded(false)
 
+      let rafId: number | null = null
+      let animEndTime = 0
+
       const updateLeft = () => {
+        const frame =
+          document.querySelector<HTMLElement>('div[class*="frame"]') ||
+          document.querySelector<HTMLElement>('#root [data-dsh-frame]')
+
+        const isCollapsed =
+          frame?.hasAttribute('data-sidebar-collapsed') ||
+          document.body.hasAttribute('data-dsh-sidebar-collapsed') ||
+          Boolean(document.querySelector('div[class*="x-Wl6W_root"][class*="collapsed"]')) ||
+          Boolean(document.querySelector('div[class*="sidebarCol"][class*="collapsed"]'))
+
         const el =
-          document.querySelector('div[class*="sidebarCol"]') ||
-          document.querySelector('[data-pane="sidebar"]') ||
-          document.querySelector('[data-slot="sidebar"]') ||
-          document.querySelector('aside')
+          document.querySelector<HTMLElement>('div[class*="sidebarCol"]') ||
+          document.querySelector<HTMLElement>('div[class*="x-Wl6W_root"]') ||
+          document.querySelector<HTMLElement>('[data-pane="sidebar"]') ||
+          document.querySelector<HTMLElement>('[data-slot="sidebar"]') ||
+          document.querySelector<HTMLElement>('aside')
+
         if (el) {
           const rect = el.getBoundingClientRect()
           const right = Math.round(rect.right)
-          if (right > 0) {
+          if (isCollapsed) {
+            document.documentElement.style.setProperty('--dsh-workspace-left', `${right > 0 ? right : 56}px`)
+            return
+          }
+          if (right > 64) {
             document.documentElement.style.setProperty('--dsh-workspace-left', `${right}px`)
             return
           }
         }
-        document.documentElement.style.setProperty('--dsh-workspace-left', '56px')
+
+        if (frame && frame.style.gridTemplateColumns && !isCollapsed) {
+          const match = frame.style.gridTemplateColumns.match(/^(\d+(?:\.\d+)?)px/)
+          if (match) {
+            const targetCol = Math.round(Number(match[1]))
+            if (targetCol > 64) {
+              document.documentElement.style.setProperty('--dsh-workspace-left', `${targetCol}px`)
+              return
+            }
+          }
+        }
+
+        const innerRoot = document.querySelector<HTMLElement>('div[class*="x-Wl6W_root"]')
+        if (innerRoot && !isCollapsed) {
+          const w = innerRoot.offsetWidth || innerRoot.scrollWidth
+          if (w > 64) {
+            document.documentElement.style.setProperty('--dsh-workspace-left', `${w}px`)
+            return
+          }
+        }
+
+        document.documentElement.style.setProperty('--dsh-workspace-left', isCollapsed ? '56px' : '280px')
+      }
+
+      const runTransitionSync = () => {
+        animEndTime = performance.now() + 450
+        if (rafId === null) {
+          const step = () => {
+            updateLeft()
+            if (performance.now() < animEndTime) {
+              rafId = requestAnimationFrame(step)
+            } else {
+              rafId = null
+              updateLeft()
+            }
+          }
+          rafId = requestAnimationFrame(step)
+        }
       }
 
       updateLeft()
+      runTransitionSync()
+
       window.addEventListener('resize', updateLeft)
-      const observer = new MutationObserver(updateLeft)
-      observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['data-sidebar-collapsed', 'class', 'style'] })
+      window.addEventListener('transitionend', updateLeft)
+
+      const observer = new MutationObserver(() => {
+        updateLeft()
+        runTransitionSync()
+      })
+      observer.observe(document.body, {
+        attributes: true,
+        subtree: true,
+        attributeFilter: ['data-sidebar-collapsed', 'data-dsh-sidebar-collapsed', 'class', 'style'],
+      })
+
+      const ro = new ResizeObserver(() => {
+        updateLeft()
+      })
+      const sidebarTarget =
+        document.querySelector<HTMLElement>('div[class*="sidebarCol"]') ||
+        document.querySelector<HTMLElement>('div[class*="x-Wl6W_root"]') ||
+        document.querySelector<HTMLElement>('div[class*="frame"]')
+      if (sidebarTarget) ro.observe(sidebarTarget)
+
       cleanupObserver = () => {
+        if (rafId !== null) cancelAnimationFrame(rafId)
         window.removeEventListener('resize', updateLeft)
+        window.removeEventListener('transitionend', updateLeft)
         observer.disconnect()
+        ro.disconnect()
         document.documentElement.style.removeProperty('--dsh-workspace-left')
       }
 
