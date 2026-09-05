@@ -397,10 +397,39 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
   }, [hasChatHistory])
 
   useEffect(() => {
+    let cleanupObserver: (() => void) | undefined
     if (isRightMaximized) {
       document.body.setAttribute('data-dsh-sidebar-maximized', '')
       setChatFolded(true)
       setChatExpanded(false)
+
+      const updateLeft = () => {
+        const el =
+          document.querySelector('div[class*="sidebarCol"]') ||
+          document.querySelector('[data-pane="sidebar"]') ||
+          document.querySelector('[data-slot="sidebar"]') ||
+          document.querySelector('aside')
+        if (el) {
+          const rect = el.getBoundingClientRect()
+          const right = Math.round(rect.right)
+          if (right > 0) {
+            document.documentElement.style.setProperty('--dsh-workspace-left', `${right}px`)
+            return
+          }
+        }
+        document.documentElement.style.setProperty('--dsh-workspace-left', '56px')
+      }
+
+      updateLeft()
+      window.addEventListener('resize', updateLeft)
+      const observer = new MutationObserver(updateLeft)
+      observer.observe(document.body, { attributes: true, subtree: true, attributeFilter: ['data-sidebar-collapsed', 'class', 'style'] })
+      cleanupObserver = () => {
+        window.removeEventListener('resize', updateLeft)
+        observer.disconnect()
+        document.documentElement.style.removeProperty('--dsh-workspace-left')
+      }
+
       const tabs = Array.from(document.querySelectorAll<HTMLElement>('[data-slot="conversation.session.header"] [role="tab"]'))
       const activeTab = tabs.find(tabEl => tabEl.getAttribute('aria-selected') === 'true' || tabEl.classList.contains('wSkVaW_tabActive'))
       const activeText = activeTab?.textContent?.trim()
@@ -415,6 +444,7 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
       document.body.removeAttribute('data-dsh-sidebar-maximized')
       document.body.removeAttribute('data-dsh-chat-expanded')
       document.body.removeAttribute('data-dsh-chat-folded')
+      document.documentElement.style.removeProperty('--dsh-workspace-left')
       if (savedSessionTabRef.current !== null) {
         const targetText = savedSessionTabRef.current
         savedSessionTabRef.current = null
@@ -424,9 +454,11 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
       }
     }
     return () => {
+      cleanupObserver?.()
       document.body.removeAttribute('data-dsh-sidebar-maximized')
       document.body.removeAttribute('data-dsh-chat-expanded')
       document.body.removeAttribute('data-dsh-chat-folded')
+      document.documentElement.style.removeProperty('--dsh-workspace-left')
     }
   }, [isRightMaximized, hasChatHistory, t])
 
@@ -2016,22 +2048,38 @@ export function Sidebar(props: { ctx: Context; store: SidebarStore }) {
                           {chatExpanded ? <IconChevronDownOutline14 /> : <IconChevronUpOutline14 />}
                         </span>
                       </button>
+                      <Tooltip label={t('collapseChat')} side="top" delayMs={500}>
+                        <button
+                          type="button"
+                          className={css.floatingChatFoldBtn}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setChatExpanded(false)
+                            setChatFolded(true)
+                          }}
+                          aria-label={t('collapseChat')}
+                        >
+                          <IconChevronDownOutline14 />
+                        </button>
+                      </Tooltip>
                     </div>
                   </section>
                 )}
-                <Tooltip label={t('collapseChat')} side="top" delayMs={500}>
-                  <button
-                    type="button"
-                    className={css.floatingBottomFoldHandle}
-                    onClick={() => {
-                      setChatExpanded(false)
-                      setChatFolded(true)
-                    }}
-                    aria-label={t('collapseChat')}
-                  >
-                    <IconChevronDownOutline14 />
-                  </button>
-                </Tooltip>
+                {!hasChatHistory && (
+                  <Tooltip label={t('collapseChat')} side="top" delayMs={500}>
+                    <button
+                      type="button"
+                      className={css.floatingBottomFoldHandle}
+                      onClick={() => {
+                        setChatExpanded(false)
+                        setChatFolded(true)
+                      }}
+                      aria-label={t('collapseChat')}
+                    >
+                      <IconChevronDownOutline14 />
+                    </button>
+                  </Tooltip>
+                )}
               </>,
               composerSeatEl,
             )
