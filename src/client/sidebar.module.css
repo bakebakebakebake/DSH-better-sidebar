@@ -2636,7 +2636,7 @@ body[data-dsh-sidebar-dragging] .bottomPanel {
     var(--dsh-composer-dock-inset, 8px) - var(--dsh-composer-dock-inset, 8px)
   );
   border: 1px solid var(--dsw-alias-border-l1);
-  background: var(--dsw-alias-bg-layer-2);
+  background: var(--dsw-alias-interactive-bg-hover);
   border-radius: 12px;
   flex: none;
   margin: 0 auto 6px auto;
@@ -2650,12 +2650,12 @@ body[data-dsh-sidebar-dragging] .bottomPanel {
 }
 
 .floatingChatHeader:hover {
-  background: var(--dsw-alias-bg-layer-3);
+  background: var(--dsw-alias-interactive-bg-active);
   border-color: var(--dsw-alias-border-l2);
 }
 
 .floatingChatHeaderExpanded {
-  background: var(--dsw-alias-bg-layer-3);
+  background: var(--dsw-alias-interactive-bg-active);
   border-color: var(--dsw-alias-border-l2);
 }
 
